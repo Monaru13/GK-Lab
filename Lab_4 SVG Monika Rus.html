@@ -1,0 +1,143 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <title>Monika Rus, Lab 4, Zad SVG</title>
+    <style>
+        body {
+            margin: 0;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+            background: #979797;
+        }
+
+        svg {
+            width: 800px;
+            height: 600px;
+            border: 1px solid black;
+            background: white;
+        }
+
+        h2 {
+            position: absolute;
+            top: 0%;
+            left: 50%;
+            transform: translateX(-50%);
+        }
+    </style>
+</head>
+
+<body>
+    <h2>Monika Rus, Lab 4, Zad SVG</h2>
+    <svg id="svgRoot">
+    </svg>
+
+    <script>
+        document.addEventListener("DOMContentLoaded", function () {
+            const svgNS = "http://www.w3.org/2000/svg";
+            const svg = document.getElementById("svgRoot");
+
+            function createFulcrum(x, y, height, baseHalfWidth, color) {
+                const points = [
+                    x + "," + (y - height), // Top point of the triangle (fulcrum point)
+                    (x - baseHalfWidth) + "," + y, // Left base point of the triangle
+                    (x + baseHalfWidth) + "," + y  // Right base point of the triangle
+                ].join(" ");
+
+                const fulcrum = document.createElementNS(svgNS, "polygon");
+                fulcrum.setAttribute("points", points);
+                fulcrum.setAttribute("fill", color);
+                svg.appendChild(fulcrum);
+            }
+
+            function createheptagon(x, y, sideLength, group) {
+                const radius = sideLength / (2 * Math.sin(Math.PI / 7));
+                const points = [];
+                const heptagonGroup = document.createElementNS(svgNS, "g");
+
+                for (let i = 0; i < 7; i++) {
+                    let angle_deg = i * 52;
+                    let angle_rad = angle_deg * Math.PI / 180;
+                    let pointX = x + radius * Math.cos(angle_rad);
+                    let pointY = y + radius * Math.sin(angle_rad);
+                    points.push(pointX + ',' + pointY);
+
+                    const spoke = document.createElementNS(svgNS, "line");
+                    spoke.setAttribute("x1", x);
+                    spoke.setAttribute("y1", y);
+                    spoke.setAttribute("x2", pointX);
+                    spoke.setAttribute("y2", pointY);
+                    spoke.setAttribute("stroke", "black");
+                    heptagonGroup.appendChild(spoke);
+                }
+
+                const heptagon = document.createElementNS(svgNS, "polygon");
+                heptagon.setAttribute("points", points.join(' '));
+                heptagon.setAttribute("fill", "transparent");
+                heptagon.setAttribute("stroke", "black");
+                heptagonGroup.appendChild(heptagon);
+                group.appendChild(heptagonGroup);
+
+                return heptagonGroup;
+            }
+
+            function createBar(startX, startY, endX, endY, width, color, group) {
+                const length = Math.sqrt(Math.pow(endX - startX, 2) + Math.pow(endY - startY, 2));
+                const angle = Math.atan2(endY - startY, endX - startX) * (180 / Math.PI);
+
+                const bar = document.createElementNS(svgNS, "rect");
+                bar.setAttribute("x", startX);
+                bar.setAttribute("y", startY - width / 2);
+                bar.setAttribute("width", length);
+                bar.setAttribute("height", width);
+                bar.setAttribute("fill", color);
+                bar.setAttribute("transform", `rotate(${angle}, ${startX}, ${startY})`);
+                group.appendChild(bar);
+            }
+
+
+            function createAssembly(x, y, scale, fulcrumColor) {
+                const rotatingGroup = document.createElementNS(svgNS, "g");
+                rotatingGroup.setAttribute("transform", `translate(${x}, ${y}) scale(${scale})`);
+
+                createFulcrum(x, y + 70 * scale, 70 * scale, 20 * scale, fulcrumColor);
+                svg.appendChild(rotatingGroup);
+
+                const leftHeptagonGroup = createheptagon(-70, 0, 20, rotatingGroup);
+                const rightHeptagonGroup = createheptagon(70, 0, 20, rotatingGroup);
+                createBar(-75, 0, 75, 0, 10, 'red', rotatingGroup);
+
+                animateAssembly(rotatingGroup, leftHeptagonGroup, rightHeptagonGroup); 
+            }
+
+            function animateAssembly(group, leftHeptagonGroup, rightHeptagonGroup) {
+                let angle = 0;
+                const heptagonSpeedFactor = 4;
+
+                function animate() {
+                    angle = (angle + 2) % 360;
+                    const reverseAngle = 360 - (angle * heptagonSpeedFactor) % 360;
+
+
+                    group.setAttribute('transform', group.getAttribute('transform').split(' rotate')[0] + ` rotate(${angle})`);
+
+
+                    leftHeptagonGroup.setAttribute('transform', `rotate(${reverseAngle}, ${leftHeptagonGroup.getBBox().x + leftHeptagonGroup.getBBox().width / 2}, ${leftHeptagonGroup.getBBox().y + leftHeptagonGroup.getBBox().height / 2})`);
+                    rightHeptagonGroup.setAttribute('transform', `rotate(${reverseAngle}, ${rightHeptagonGroup.getBBox().x + rightHeptagonGroup.getBBox().width / 2}, ${rightHeptagonGroup.getBBox().y + rightHeptagonGroup.getBBox().height / 2})`);
+
+                    requestAnimationFrame(animate);
+                }
+                animate();
+            }
+
+            createAssembly(150, 250, 1.1, 'pink');
+            createAssembly(450, 370, 1.7, 'blue');
+            createAssembly(700, 150, 0.8, 'green');
+        });
+    </script>
+</body>
+
+</html>
