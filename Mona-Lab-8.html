@@ -64,7 +64,7 @@ function createWorld() {
     scene.add(floor);
     
     var geometry = new THREE.SphereGeometry( 3.7, 32, 32 );
-    var material = new THREE.MeshBasicMaterial( { map: new THREE.TextureLoader().load('resources/earth.jpg') });
+    var material = new THREE.MeshBasicMaterial( { map: new THREE.TextureLoader().load('https://picsum.photos/512') });
     var sphere = new THREE.Mesh(geometry, material);
     sphere.position.y=3.8;
     scene.add(sphere);
@@ -110,8 +110,16 @@ function createWorld() {
     scene.add(roof2);
     
     var loader = new THREE.GLTFLoader();
+    var textureLoader = new THREE.TextureLoader();
+    var horseTexture = textureLoader.load('https://picsum.photos/512');
  
     loader.load('https://threejs.org/examples/models/gltf/Horse.glb', function (gltf) {
+        gltf.scene.traverse(function (child) {
+            if (child.isMesh) {
+                child.material.map = horseTexture;
+            }
+        });
+        
         gltf.scene.scale.multiplyScalar(0.03);
 
         horse1 = gltf.scene.clone();
